@@ -11,6 +11,10 @@
 ####################################################
 
 FLG=0
+DATETIME=""
+LENS=""
+# ↓とりあえず手動で値を合わせている
+LENSINFOINDEX=4
 
 echo ---------- start rename all JPG files in `pwd` ----------
 
@@ -23,18 +27,23 @@ do
     exit ${FLG}
   fi
 
-  DATETIME=`echo ${EXIF} | awk '{print $2"_"$3}' | sed -e s/://g`
-  FLG=$?
-  if [ ${FLG} -ne 0 ]; then
-    echo ---- error detected ----
-    exit ${FLG}
+  if [[ "$EXIF" == *DateTime* ]]; then
+    LENSINFOINDEX=5
+    DATETIME=`echo ${EXIF} | awk '{print $2"_"$3}' | sed -e s/://g`
+    FLG=$?
+    if [ ${FLG} -ne 0 ]; then
+      echo ---- error detected ----
+      exit ${FLG}
+    fi
   fi
 
-  LENS=`echo ${EXIF} | awk '{for(i=5;i<NF;++i){printf("%s",$i)}print $NF}'`
-  FLG=$?
-  if [ ${FLG} -ne 0 ]; then
-    echo ---- error detected ----
-    exit ${FLG}
+  if [[ "$EXIF" == *LensModel* ]]; then
+    LENS=`echo ${EXIF} | awk '{for(i='$LENSINFOINDEX';i<NF;++i){printf("%s",$i)}print $NF}'`
+    FLG=$?
+    if [ ${FLG} -ne 0 ]; then
+      echo ---- error detected ----
+      exit ${FLG}
+    fi
   fi
 
   AFTERNAME=${DATETIME}_${file%.*}_${LENS}.JPG
